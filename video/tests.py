@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 from django.test import TestCase
+from django.core.exceptions import ValidationError
 
 from .models import Theme, Video, Comment, Thumb
 
@@ -136,6 +137,24 @@ class ThemeTestCase(TestCase):
                 is_positive=True
             ).count(), 5
         )
+
+    def test_video_without_theme_accepted(self):
+        """A video without a theme should be accepted."""
+        video = Video.objects.create(
+            title='No theme is the thing',
+            date_uploaded=datetime.now(),
+            views=0,
+        )
+        self.assertEqual(video.title, 'No theme is the thing')
+        self.assertIsNotNone(video.pk)
+
+    def test_old_video_cannot_save(self):
+        """1 year old video cannot be inserted."""
+        with self.assertRaises(ValidationError):
+            Video.objects.create(
+                title='Old but gold',
+                date_uploaded=datetime.now() - timedelta(days=380),
+            )
 
 
 
